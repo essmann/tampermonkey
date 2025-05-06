@@ -400,13 +400,30 @@ const valueTypes = ["font size"]; //values that will open the value panel
             },
 
         },
-        theme:{
+       
+        "font size in race": {
+            value: "20px",
+
+            handler: () => {
+                debugger;
+                state.racingFontSize = "",
+                updateLocalStorage("font size in race", null, true);
+            }
+         },
+         "font size":{
+            value: "20px",
+            handler: () => {
+                
+                updateLocalStorage("font size", null, true);
+            }
+         },
+         theme:{
             handler: () => {
                 //setDefaultThemeHandler("responsive");
                 //localStorage("background") typeracer sets this by default, not necessary
                 window.location.reload();
             }
-        }
+        },
     }
     //A suggestion can either be
     //1. Toggleable boolean type -- On or Off
@@ -424,6 +441,18 @@ const valueTypes = ["font size"]; //values that will open the value panel
 
 //   }
 var paletteSuggestions = {
+    default: {
+        all: {
+            type: "action",
+            id: "default-all",
+            handler: () => {
+                debugger;
+                for(const [key, value] of Object.entries(defaultSettings)){
+                    value.handler();
+                }
+            }
+        }
+    },
     theme: {
         dark: {
             type: "toggle",
@@ -942,6 +971,7 @@ function addCheck(element) {
 
         container.addEventListener("mouseover", () => {})
         container.addEventListener("click", () => {
+            debugger;
 
             if(type == "value"){
                 //should override functionality and display a box instead.
@@ -951,7 +981,12 @@ function addCheck(element) {
 
             }
             else if(type == "action"){
+                debugger;
+                const inputBox = document.querySelector(".paletteInput");
+                inputBox.focus();
+                handler();
 
+                
             }
             else{
                 const inputBox = document.querySelector(".paletteInput");
