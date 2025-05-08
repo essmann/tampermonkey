@@ -385,6 +385,26 @@
     }
   }
   class CommandBuilder {
+   static commandTemplate(command){
+      debugger;
+      // Template literal for a command
+        const template = `
+        <div class="commandContainer" id="${command.id}">
+          <i class="${command.icon || ''}"></i>
+          <div class="category">${command.category}</div>
+          <i class="${Config.icons.arrow}"></i>
+          <i class="${Config.icons.check}" id="${command.id}" style="visibility: ${command.enabled ? 'visible' : 'hidden'}"></i>
+          <div class="commandName">${command.name}</div>
+        </div>
+      `;
+      const tempContainer = document.createElement('div');
+      tempContainer.innerHTML = template;
+      return tempContainer;
+
+
+      
+      
+    }
     static createCommandElements(commandsArray) {
       this.clearCommandElements();
       commandsArray.forEach((obj) => {
@@ -392,7 +412,9 @@
         this.createSingleCommandElement(command);
       });
     }
-    static handleCommandClick(command, checkBox) {
+    static handleCommandClick(command) {
+      debugger;
+      const checkBox = document.querySelector("#"+command.id).querySelector("#"+command.id);
       debugger;
       let enabledCommands = State.enabledCommands;
       let enabledCommandsInSameCategory = enabledCommands.filter(
@@ -447,40 +469,12 @@
       }
     }
     static createSingleCommandElement(command) {
-      //Creation of HTML components
-      const container = document.createElement("div");
-      container.className = "commandContainer";
-      const categoryElement = document.createElement("div");
-      categoryElement.className = "category";
-      const iconElement = document.createElement("i");
-      iconElement.className = command.icon;
-      const nameElement = document.createElement("div");
-      nameElement.className = "commandName";
-      const arrow = document.createElement("i");
-      arrow.className = Config.icons.arrow;
-      const checkBox = document.createElement("i");
-      checkBox.className = Config.icons["check"];
-      ///////
-      checkBox.id = command.id;
-      container.id = command.id;
-      nameElement.textContent = command.name;
-      categoryElement.textContent = command.category;
-
-      checkBox.style.visibility = "hidden";
-      if (command.enabled) {
-        checkBox.style.visibility = "visible";
-      }
-      container.appendChild(iconElement);
-      container.appendChild(categoryElement);
-      container.appendChild(arrow);
-      container.appendChild(checkBox);
-      container.appendChild(nameElement);
-
-      container.addEventListener("click", () => {
-        this.handleCommandClick(command, checkBox);
+      const commandElement = CommandBuilder.commandTemplate(command);
+      commandElement.addEventListener("click", () => {
+        this.handleCommandClick(command);
       });
 
-      paletteList.appendChild(container);
+      paletteList.appendChild(commandElement);
     }
   }
   function setupArrowKeyNavigation(containerSelector) {
@@ -563,15 +557,23 @@
       initializeNavigation(); // Initial setup
   }
   
-  
-  // ============================================
-  // 🧠 Styles
-  // ============================================
+ function applyIcons(){
   const fa = document.createElement("link");
   fa.rel = "stylesheet";
   fa.href =
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
   document.head.appendChild(fa);
+ } 
+  // ============================================
+  // 🧠 Styles
+  // ============================================
+debugger;
+  try{
+    applyIcons();
+  }
+  catch(e){
+    console.log(e);
+  }
   const styles = document.createElement("style");
   styles.textContent = `
  
