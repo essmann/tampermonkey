@@ -315,7 +315,7 @@ function changeFont(value){
         display: flex;
 
         }
-        .commandContainer:hover{
+        .hover {
           background:#d1d0c5
         }
   
@@ -355,6 +355,8 @@ function changeFont(value){
   class State {
     static enabledCommands = [] //holds the commands which are enabled in the palette
     static currentFont;
+    static lastHoveredCommand;
+    static hoverColor = "#d1d0c5";
     static removeCommandById (id) {
       let index = 0
       this.enabledCommands.forEach(command => {
@@ -621,8 +623,17 @@ function changeFont(value){
     }
     static createSingleCommandElement (command) {
       const commandElement = CommandBuilder.commandTemplate(command)
+      
       commandElement.addEventListener('click', () => {
         this.handleCommandClick(command)
+      })
+      commandElement.addEventListener("mouseover", (e) => {
+        let allHoveredElements = Array.from(document.querySelectorAll(".hover"));
+        allHoveredElements.forEach((el)=>el.classList.remove("hover"));
+        commandElement.classList.add("hover");
+      })
+      commandElement.addEventListener("mouseout", (e) => {
+        commandElement.classList.remove("hover");
       })
 
       paletteList.appendChild(commandElement);
@@ -760,6 +771,68 @@ function changeFont(value){
   });
   observer.observe(document.body, { childList: true, subtree: true });
     }
+    static handleArrowKeys(event){
+      //let commandElements = [];
+      console.log("handling arrow");
+      let key = event.key;
+      let commandElements = document.querySelectorAll(".commandContainer");
+      let container = document.querySelector(".inputSettingsList");
+      if(commandElements.length == 0 || palette.style.display == "none"){
+        return;
+      }
+      
+      let currentIndex = 0;
+      let i = 0;
+      commandElements = Array.from(commandElements);
+      commandElements.forEach((el)=>{
+        if(el.classList.contains("hover")){
+          currentIndex = i; 
+        }
+        i++;
+      })
+      console.log("Current index: "+currentIndex + ". Element: "+commandElements[currentIndex]);
+      let currentElement = commandElements[currentIndex];
+    
+      
+      
+      let downElement = (currentIndex+1 <commandElements.length-1) ? commandElements[currentIndex+1] : null;
+      let upElement = (currentIndex-1 >-1) ? commandElements[currentIndex-1] : null;
+
+      
+      console.log(downElement);
+      console.log(upElement);
+      //let startIndex = State.lastHoveredCommand ?? 0;
+      //start from where we last hovered, clear all hovers, then start navigation
+
+      //clear state.lasthovered when we press a key afterwards
+
+      //find the currently hovered element
+      
+
+      
+      if(key == "ArrowUp"){
+        if(upElement){
+          currentElement.classList.remove("hover");
+          upElement.classList.add("hover");
+          return;
+        }
+      }
+      else if (key=="ArrowDown"){
+        if(downElement){
+          currentElement.classList.remove("hover");
+          downElement.classList.add("hover");
+          return;
+        }
+      }
+      else if(key == "Enter"){
+        debugger;
+          
+
+      }
+      
+
+
+    }
   }
   function applyIcons () {
     const fa = document.createElement('link')
@@ -878,7 +951,9 @@ const loadedSettings = LocalStorage.loadSettings();
     }
      },150)
   })
-  setupArrowKeyNavigation('ul.inputSettingsList')
+   document.addEventListener("keydown", (e)=>EventHandlers.handleArrowKeys(e));
+
+  
 
   // ============================================
   // 🧠 Main program flow.
