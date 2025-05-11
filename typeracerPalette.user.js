@@ -800,7 +800,7 @@ function changeFont(value){
     
       
       
-      let downElement = (currentIndex+1 <commandElements.length-1) ? commandElements[currentIndex+1] : null;
+      let downElement = (currentIndex+1 <commandElements.length) ? commandElements[currentIndex+1] : null;
       let upElement = (currentIndex-1 >-1) ? commandElements[currentIndex-1] : null;
 
       
