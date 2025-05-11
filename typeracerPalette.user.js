@@ -573,6 +573,11 @@ function changeFont(value){
         let command = Object.values(obj)[0]
         this.createSingleCommandElement(command)
       })
+      const commandElementsContainer = document.querySelector(".inputSettingsList");
+      const commandElements = commandElementsContainer.children;
+      if(commandElements){
+        commandElements[0].classList.add("hover");
+      }
     }
     static handleCommandClick (command) {
      
@@ -811,21 +816,30 @@ function changeFont(value){
 
       
       if(key == "ArrowUp"){
+        event.preventDefault();
         if(upElement){
           currentElement.classList.remove("hover");
           upElement.classList.add("hover");
+          
           return;
         }
       }
       else if (key=="ArrowDown"){
+        event.preventDefault();
         if(downElement){
+          
           currentElement.classList.remove("hover");
           downElement.classList.add("hover");
           return;
         }
       }
       else if(key == "Enter"){
-        debugger;
+        
+        if(currentElement){
+          const id = currentElement.id;
+          let command = commands.getCommandById(id);
+          CommandBuilder.handleCommandClick(command);
+        }
           
 
       }
