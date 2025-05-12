@@ -9,79 +9,77 @@
 // @grant        none
 // ==/UserScript==
 
-
-
 ;(function () {
   'use strict'
 class LocalStorage {
-
+  
   static localStorageName = "palette.settings";
 
 
   static getSavedSettings(){
-
+  
    let savedItem = localStorage.getItem(this.localStorageName);
-
+   
     if(!savedItem){
       localStorage.setItem(this.localStorageName, JSON.stringify({}));
     }
-
+    
     savedItem = localStorage.getItem(this.localStorageName); // Correctly update the object
     savedItem = JSON.parse(savedItem);
     return savedItem;
   }
   static saveCommand(command, value=null) {
-
+  
     let savedItem = this.getSavedSettings();
 
-
+    
     if(command.type !== "value"){
       savedItem[command.category] = command.id;
     }
     else{
       savedItem[command.category] = {id: command.id, value: value};
     }
-
+    
      let newItem = savedItem;
    ;
     localStorage.setItem(this.localStorageName, JSON.stringify(newItem)); // Stringify before saving
   }
   static removeCommand(command){
-
+   
     let savedItem = this.getSavedSettings();
 
-
+  
     delete savedItem[command.category];
-
-
+    
+    
      let newItem = savedItem;
-
+   
     localStorage.setItem(this.localStorageName, JSON.stringify(newItem)); // Stringify before saving
   }
   static loadSettings(){
      let savedItem = this.getSavedSettings();
-
+  
      for( const [key, value] of Object.entries(savedItem)){
       console.log(key + " " +  value);
       if(typeof value !== "string"){
-
+     
         const command = commands.getCommandById(value.id);
         commands.executeCommand(command.id, value.value, true)
       }
       else{
-
+       
         const command = commands.getCommandById(value);
         commands.executeCommand(command.id, command.name, true)
       }
       }
-
+      
       return true;
   }
-
+ 
 }
 
 function changeFont(value){
-
+    
            const excludedContainer = document.querySelector(".palette");
   if (!excludedContainer) {
     console.warn(`Container with selector "${".palette"}" not found.  Font family may not be changed as expected.`);
@@ -101,7 +99,7 @@ function changeFont(value){
   let currentNode;
   while ((currentNode = walker.nextNode())) {
     currentNode.style.fontFamily = value;
-
+    
   }
 }
   class Config {
@@ -116,17 +114,6 @@ function changeFont(value){
       search: this.alternateIcons ? "  🔍  ": 'fas fa-search',
       check: this.alternateIcons ? "✓  ": 'fas fa-fw fa-check',
       arrow: this.alternateIcons ? "  ➤":'fas fa-fw fa-chevron-right chevronIcon'
-    }
-    static mainColor = "#323437";
-    static subColor = "#2C2E31";
-
-    static UIelements = { //query selectors
-
-      backgroundElements: ["#universe-background", ".flex-wrapper"],
-      navBar: ".themeHeader",
-      footer: "#footer",
-
-
     }
     static fonts = [
       'Arial',
@@ -164,22 +151,8 @@ function changeFont(value){
       "font size":{
         handler: (value) => document.body.style.fontSize = value,
         default: () => document.body.style.fontSize = this.defaultFontSize
-      },
-      customTheme:{
-        handler: (value) =>{
-          console.log("custom theme");
-          debugger;
-          let elements = Config.UIelements;
-          elements.backgroundElements.forEach((el)=>{
-            document.querySelector(el).style.background = Config.mainColor;
-          })
-          document.querySelector(elements.navBar).style.background = Config.mainColor;
-          document.querySelector(elements.footer).style.background = Config.mainColor;
-        },
-        }
-
-
-
+      }
+      
     }
 
     static languages = {
@@ -304,20 +277,20 @@ function changeFont(value){
         scrollbar-width: thin;
 
       }
-
+  
       .inputContainer {
         display: flex;
         align-items: center;
         padding: 8px;
         margin-right: 15px;
       }
-
+  
       .paletteSearchIcon {
         color: rgb(100, 102, 105);
         margin-right: 8px;
-
+        
       }
-
+  
       .paletteInput {
         width: 100%;
         font-size: 16px;
@@ -327,7 +300,7 @@ function changeFont(value){
         outline: none;
         color: #d1d0c5;
       }
-
+  
       .inputSettingsList {
         height: auto;
         min-height: 0;
@@ -345,7 +318,7 @@ function changeFont(value){
         .hover {
           background:#d1d0c5
         }
-
+  
       .inputValuePanel {
         position: fixed;
         top: 20%;
@@ -362,7 +335,7 @@ function changeFont(value){
         width: 30rem;
         color: #d1d0c5;
       }
-
+  
       .inputValuePanel input {
         width: 100%;
         padding: 8px;
@@ -384,8 +357,6 @@ function changeFont(value){
     static currentFont;
     static lastHoveredCommand;
     static hoverColor = "#d1d0c5";
-    static racingCommands = [];
-    static isRacing;
     static removeCommandById (id) {
       let index = 0
       this.enabledCommands.forEach(command => {
@@ -407,100 +378,57 @@ function changeFont(value){
       let name = command.name
       this.commands[category][name].enabled = boolean
     }
-    createCommand(options) {
-  const {
-    category,
-    name,
-    type,
-    handler,
-    resetHandler,
-    icon,
-    enableLocalStorage = true,
-    inRaceCommand = false,
-  } = options;
-
-  const categoryId = category.split(' ').join('-');
-
-  if (!this.commands[category]) {
-    this.commands[category] = {};
-  }
-  // Default resetHandler
-  let actualResetHandler = resetHandler || (() => 'Empty handler bro');
-
-
-  let actualIcon = icon;
-  if (!actualIcon) {
-    // Check for default icon for its category
-    if (Config.icons[category]) {
-      actualIcon = Config.icons[category];
-    }
-  }
-
-  this.commands[category][name] = {
-    type: type,
-    id: `${categoryId}-${name.split(' ').join('-')}`,
-    handler: handler,
-    resetHandler: actualResetHandler,
-    category: category,
-    name: name,
-    icon: actualIcon,
-    enabled: false,
-    enableLocalStorage: enableLocalStorage,
-  };
-
-  if (!resetHandler) {
-    this.commands[category][name].resetHandler =
-      Config.categoryHandlers[category]["default"];
-  }
-  if (!handler) {
-        if(category=="customTheme"){
-          debugger;
+    createCommand (category, name, type, handler, resetHandler, icon, enableLocalStorage=true) {
+      const categoryId = category.split(' ').join('-')
+      if (!this.commands[category]) {
+        this.commands[category] = {}
+      }
+      if (!resetHandler) {
+        resetHandler = () => 'Empty handler bro'
+      }
+      
+      if (!icon) {
+        //check for default icon for its category
+        if (Config.icons[category]) {
+          icon = Config.icons[category]
         }
-    try {
-      this.commands[category][name].handler =
-        Config.categoryHandlers[category]["handler"];
-    } catch (e) {
-      throw new Error(e);
-    }
-  }
-}
+      }
+      this.commands[category][name] = {
+        type: type,
+        id: `${categoryId}-${name.split(' ').join('-')}`,
+        handler: handler,
+        resetHandler: resetHandler,
+        category: category,
+        name: name,
+        icon: icon,
+        enabled: false,
+        enableLocalStorage: enableLocalStorage,
+      }
 
+      if (!handler) {
+        this.commands[category][name].handler =
+          Config.categoryHandlers[category]["handler"]
+      }
+      if (!resetHandler) {
+        this.commands[category][name].resetHandler =
+        Config.categoryHandlers[category]["default"];
+      }
+    }
 
     executeCommand (id, value, firedFromLocalStorage=false) {
       const command = this.getCommandById(id)
-
       if (command && typeof command.handler === 'function') {
-
+      
         if(command.type !== "value"){
           command.enabled = true
         State.enabledCommands.push(this.getCommandById(id))
         this.updateCommandState(command, true)
         }
         console.log("Executing command. id: "+id);
-
+     
         if(!firedFromLocalStorage && command.enableLocalStorage){
           LocalStorage.saveCommand(command, value);
         }
-
-        if(command.inRaceCommand){
-          if(!State.racingCommands.includes(command)){
-            State.racingCommands.push(command);
-          }
-          else{
-            if(State.isRacing){
-              let i = 0;
-              State.racingCommands.forEach((cmnd)=>{
-                if(cmnd==command){
-                  State.racingCommands.splice(i,1);
-                }
-                i++;
-              })
-              return command.handler(value);
-            }
-          }
-          
-        }
-       
         return command.handler(value)
       }
       throw new Error(
@@ -523,7 +451,7 @@ function changeFont(value){
         LocalStorage.removeCommand(command);
         return command.resetHandler()
 
-
+       
       }
     }
     // utility
@@ -548,11 +476,11 @@ function changeFont(value){
       if(query==""){return;}
       for (const categoryCommands of Object.values(this.commands)) {
         for (const [name, command] of Object.entries(categoryCommands)) {
-
+     
           if (
-
+            
             command.category.startsWith(query) ||
-            (name && name.startsWith(query))
+            (name && name.startsWith(query)) 
           ) {
             results.push({ [name]: command })
           }
@@ -571,14 +499,12 @@ function changeFont(value){
       fonts.forEach(font => {
         font = font.toLowerCase()
         this.createCommand(
-          {
-            category: "font",
-            name: font,
-            type: "toggle",
-            handler: Config.categoryHandlers['font']["handler"],
-            resetHandler:  Config.categoryHandlers['font']["default"],
-          }
-
+          'font',
+          font,
+          'toggle',
+          Config.categoryHandlers['font']["handler"],
+          Config.categoryHandlers['font']["default"],
+          
         )
       })
     }
@@ -587,33 +513,31 @@ function changeFont(value){
       for (const [key, value] of Object.entries(languages)) {
         let language = key.toLowerCase()
         this.createCommand(
+          'language',
+          language,
+          'toggle',
+          Config.categoryHandlers['language']["handler"],
+          Config.categoryHandlers['language']["default"],
+          "",
+          false
           
-           {
-            category: "language",
-            name: language,
-            type: "toggle",
-            handler: Config.categoryHandlers['language']["handler"],
-            resetHandler:  Config.categoryHandlers['language']["default"],
-            enableLocalStorage: false,
-          }
-
         )
       }
     }
   }
   class CommandBuilder {
     static updateCheckboxVisibility(id, isVisible){
-
+      
       const commandContainer = document.querySelector(`#${id}`);
          const checkbox = commandContainer.children[commandContainer.children.length - 2];
     if (checkbox) {
       checkbox.style.visibility = isVisible ? 'visible' : 'hidden';
     }
     console.log("updateCheckboxVisibility. Removing id: "+id);
-
+  
     }
     static commandTemplate (command) {
-
+     
       // Template literal for a command
       const template = !Config.alternateIcons ? `
         <div class="commandContainer" id="${command.id}">
@@ -638,7 +562,7 @@ function changeFont(value){
           <div class="commandName">${command.name}</div>
         </div>
       `
-
+     
       const tempContainer = document.createElement('div');
       tempContainer.innerHTML = template;
       return tempContainer.children[0];
@@ -656,8 +580,8 @@ function changeFont(value){
       }
     }
     static handleCommandClick (command) {
-
-
+     
+      
       let enabledCommands = State.enabledCommands
       let enabledCommandsInSameCategory = enabledCommands.filter(
         obj => obj.category == command.category
@@ -675,7 +599,7 @@ function changeFont(value){
           !command.enabled &&
           enabledCommandsInSameCategory.length > 0
         ) {
-
+          
 
           enabledCommandsInSameCategory.forEach(obj => {
             let enabledCommand = obj
@@ -704,7 +628,7 @@ function changeFont(value){
     }
     static createSingleCommandElement (command) {
       const commandElement = CommandBuilder.commandTemplate(command)
-
+      
       commandElement.addEventListener('click', () => {
         this.handleCommandClick(command)
       })
@@ -720,7 +644,7 @@ function changeFont(value){
       paletteList.appendChild(commandElement);
     }
   }
-
+ 
   function setupArrowKeyNavigation (containerSelector) {
     const container = document.querySelector(containerSelector)
     if (!container) {
@@ -754,7 +678,7 @@ function changeFont(value){
       }
 
       keydownListener = event => {
-
+        
         if(valuePanel.contains(event.target)){
           return;
         }
@@ -765,7 +689,7 @@ function changeFont(value){
           selectedIndex =
             (selectedIndex - 1 + elements.length) % elements.length
           highlightElement(selectedIndex)
-
+          
         } else if (event.key === 'Enter' && event.target.className !== "inputValuePanel" ) {
 
           let enterIndex = selectedIndex;
@@ -775,18 +699,18 @@ function changeFont(value){
             }else{
               enterIndex = 0;
             }
-
+           
           }
-
-
-
+         
+       
+          
           console.log(elements[selectedIndex])
           console.log("elements" + elements);
           console.log("container" + container);
           console.log("selectedIndex: " + selectedIndex);
           const id = elements[enterIndex].id
-
-
+          
+          
           const command = commands.getCommandById(id)
           CommandBuilder.handleCommandClick(command)
         }
@@ -823,34 +747,35 @@ function changeFont(value){
 
     initializeNavigation() // Initial setup
   }
-
+  
   class EventHandlers{
-  static detectRacingStateObserver() {
-  const observer = new MutationObserver(() => {
-    const avatar = document.querySelector(".avatarContainer");
-    if (avatar) {
-      console.log("Race detected.");
-      State.isRacing = true;
-      State.racingCommands.forEach((command)=>{
-        commands.executeCommand(command.id);
-      })
-    } else {
-      console.log("Race not detected");
-      State.isRacing = false;
+  static  inRaceObserver(){
+         const observer = new MutationObserver((mutationsList, observer) => {
+    const targetElement = document.querySelector(".mainViewport");
+    if (targetElement) {
+      observer.disconnect();
+      const mainViewport = document.querySelector('.mainViewport');
+      if (mainViewport) {
+        const mainViewportObserver = new MutationObserver((viewportMutationsList) => {
+          viewportMutationsList.forEach(mutation => {
+            console.log('.mainViewport mutation:', mutation);
+            const raceTextBox = document.querySelector("#smoothCaret").previousSibling;
+            if(raceTextBox && raceTextBox.style.fontFamily !== State.currentFont){
+              raceTextBox.style.fontFamily == State.currentFont;
+            }
+
+          });
+        });
+        mainViewportObserver.observe(mainViewport, { attributes: true, childList: true, subtree: true, characterData: true });
+        
+        
+      } else {
+        console.error('.mainViewport element not found.');
+      }
     }
   });
-
-  // Start observing
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-
-  // Run initial check immediately
-  const avatar = document.querySelector(".avatarContainer");
-  State.isRacing = !!avatar;
-}
-
+  observer.observe(document.body, { childList: true, subtree: true });
+    }
     static handleArrowKeys(event){
       //let commandElements = [];
       console.log("handling arrow");
@@ -860,25 +785,25 @@ function changeFont(value){
       if(commandElements.length == 0 || palette.style.display == "none"){
         return;
       }
-
+      
       let currentIndex = 0;
       let i = 0;
       commandElements = Array.from(commandElements);
       commandElements.forEach((el)=>{
         if(el.classList.contains("hover")){
-          currentIndex = i;
+          currentIndex = i; 
         }
         i++;
       })
       console.log("Current index: "+currentIndex + ". Element: "+commandElements[currentIndex]);
       let currentElement = commandElements[currentIndex];
-
-
-
+    
+      
+      
       let downElement = (currentIndex+1 <commandElements.length) ? commandElements[currentIndex+1] : null;
       let upElement = (currentIndex-1 >-1) ? commandElements[currentIndex-1] : null;
 
-
+      
       console.log(downElement);
       console.log(upElement);
       //let startIndex = State.lastHoveredCommand ?? 0;
@@ -887,38 +812,38 @@ function changeFont(value){
       //clear state.lasthovered when we press a key afterwards
 
       //find the currently hovered element
+      
 
-
-
+      
       if(key == "ArrowUp"){
         event.preventDefault();
         if(upElement){
           currentElement.classList.remove("hover");
           upElement.classList.add("hover");
-
+          
           return;
         }
       }
       else if (key=="ArrowDown"){
         event.preventDefault();
         if(downElement){
-
+          
           currentElement.classList.remove("hover");
           downElement.classList.add("hover");
           return;
         }
       }
       else if(key == "Enter"){
-
+        
         if(currentElement){
           const id = currentElement.id;
           let command = commands.getCommandById(id);
           CommandBuilder.handleCommandClick(command);
         }
-
+          
 
       }
-
+      
 
 
     }
@@ -930,7 +855,7 @@ function changeFont(value){
       'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
     document.head.appendChild(fa)
   }
-
+ 
   // ============================================
   // 🧠 Styles
   // ============================================
@@ -942,7 +867,7 @@ function changeFont(value){
   }
   const styles = document.createElement('style')
   styles.textContent = `
-
+ 
 `
 
   // ============================================
@@ -966,11 +891,11 @@ function changeFont(value){
   document.head.appendChild(paletteFontStyles);
   function setPaletteFontStyles(){
     let fonts = Config.fonts;
-
+   
     var cssSheet = paletteFontStyles.sheet;
     fonts.forEach((font)=>{
-
-
+      
+      
       font = font.toLowerCase();
       let fontId = "font-" + font.split(" ").join("-");
       cssSheet.insertRule(`#${fontId} >.commandName { font-family: ${font}; }`, cssSheet.cssRules.length);
@@ -979,30 +904,26 @@ function changeFont(value){
   }
 
 setPaletteFontStyles();
-debugger;
-EventHandlers.detectRacingStateObserver();
+EventHandlers.inRaceObserver();
   // ============================================
   // 🧠 Initialize command object
   // ============================================
-
+ 
   var commands = new Commands()
   commands.initializeFonts()
   commands.initializeLanguages()
-  commands.createCommand({
-    category: "wpm display",
-    name: "centered",
-    type: "toggle",
-    handler: () => console.log("test wpm display"),
-    resetHandler: () =>"",
-    inRaceCommand: true,
-  })
- 
+  commands.createCommand('theme', 'dark', 'toggle', () => '')
+  commands.createCommand('theme', 'responsive', 'toggle', () => '')
+  commands.createCommand('theme', 'classic', 'toggle', () => '')
+  commands.createCommand('background', 'none', 'toggle', () => '')
+  commands.createCommand('background', 'none', 'toggle', () => '')
+  commands.createCommand('font size', 'size', 'value', () => '');
 
 const loadedSettings = LocalStorage.loadSettings();
 
 
   //Testing
-
+ 
   // ============================================
   // 🧠 Event listeners
   // ============================================
@@ -1023,30 +944,30 @@ const loadedSettings = LocalStorage.loadSettings();
     if(event.key == "Enter" && event.target.value){
       const id = panel.parentElement.classList[1];
       const value = event.target.value;
-
+     
       commands.executeCommand(id, value);
       closeValuePanel();
     }
   })
 
    document.addEventListener("click", (event) => {
-
-
-
+    
+     
+    
     if(!palette.contains(event.target)){
-
+      
       closePalette();
     }
      setTimeout(()=>{
       if(!valuePanel.contains(event.target)){
-
+      
       closeValuePanel();
     }
      },150)
   })
    document.addEventListener("keydown", (e)=>EventHandlers.handleArrowKeys(e));
 
-
+  
 
   // ============================================
   // 🧠 Main program flow.
@@ -1055,7 +976,7 @@ const loadedSettings = LocalStorage.loadSettings();
   input.addEventListener('input', function (event) {
     let search = event.target.value;
     console.log(search);
-
+    
 
     let commandsArray = commands.searchCommand(search)
     console.log(commandsArray)
