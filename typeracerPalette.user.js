@@ -12,74 +12,74 @@
 ;(function () {
   'use strict'
 class LocalStorage {
-  
+
   static localStorageName = "palette.settings";
 
 
   static getSavedSettings(){
-  
+
    let savedItem = localStorage.getItem(this.localStorageName);
-   
+
     if(!savedItem){
       localStorage.setItem(this.localStorageName, JSON.stringify({}));
     }
-    
+
     savedItem = localStorage.getItem(this.localStorageName); // Correctly update the object
     savedItem = JSON.parse(savedItem);
     return savedItem;
   }
   static saveCommand(command, value=null) {
-  
+
     let savedItem = this.getSavedSettings();
 
-    
+
     if(command.type !== "value"){
       savedItem[command.category] = command.id;
     }
     else{
       savedItem[command.category] = {id: command.id, value: value};
     }
-    
+
      let newItem = savedItem;
    ;
     localStorage.setItem(this.localStorageName, JSON.stringify(newItem)); // Stringify before saving
   }
   static removeCommand(command){
-   
+
     let savedItem = this.getSavedSettings();
 
-  
+
     delete savedItem[command.category];
-    
-    
+
+
      let newItem = savedItem;
-   
+
     localStorage.setItem(this.localStorageName, JSON.stringify(newItem)); // Stringify before saving
   }
   static loadSettings(){
      let savedItem = this.getSavedSettings();
-  
+
      for( const [key, value] of Object.entries(savedItem)){
       console.log(key + " " +  value);
       if(typeof value !== "string"){
-     
+
         const command = commands.getCommandById(value.id);
         commands.executeCommand(command.id, value.value, true)
       }
       else{
-       
+
         const command = commands.getCommandById(value);
         commands.executeCommand(command.id, command.name, true)
       }
       }
-      
+
       return true;
   }
- 
+
 }
 
 function changeFont(value){
-    
+
            const excludedContainer = document.querySelector(".palette");
   if (!excludedContainer) {
     console.warn(`Container with selector "${".palette"}" not found.  Font family may not be changed as expected.`);
@@ -99,7 +99,7 @@ function changeFont(value){
   let currentNode;
   while ((currentNode = walker.nextNode())) {
     currentNode.style.fontFamily = value;
-    
+
   }
 }
   class Config {
@@ -152,7 +152,7 @@ function changeFont(value){
         handler: (value) => document.body.style.fontSize = value,
         default: () => document.body.style.fontSize = this.defaultFontSize
       }
-      
+
     }
 
     static languages = {
@@ -277,20 +277,20 @@ function changeFont(value){
         scrollbar-width: thin;
 
       }
-  
+
       .inputContainer {
         display: flex;
         align-items: center;
         padding: 8px;
         margin-right: 15px;
       }
-  
+
       .paletteSearchIcon {
         color: rgb(100, 102, 105);
         margin-right: 8px;
-        
+
       }
-  
+
       .paletteInput {
         width: 100%;
         font-size: 16px;
@@ -300,7 +300,7 @@ function changeFont(value){
         outline: none;
         color: #d1d0c5;
       }
-  
+
       .inputSettingsList {
         height: auto;
         min-height: 0;
@@ -315,10 +315,10 @@ function changeFont(value){
         display: flex;
 
         }
-        .hover {
+        .commandContainer:hover{
           background:#d1d0c5
         }
-  
+
       .inputValuePanel {
         position: fixed;
         top: 20%;
@@ -335,7 +335,7 @@ function changeFont(value){
         width: 30rem;
         color: #d1d0c5;
       }
-  
+
       .inputValuePanel input {
         width: 100%;
         padding: 8px;
@@ -355,8 +355,6 @@ function changeFont(value){
   class State {
     static enabledCommands = [] //holds the commands which are enabled in the palette
     static currentFont;
-    static lastHoveredCommand;
-    static hoverColor = "#d1d0c5";
     static removeCommandById (id) {
       let index = 0
       this.enabledCommands.forEach(command => {
@@ -386,7 +384,7 @@ function changeFont(value){
       if (!resetHandler) {
         resetHandler = () => 'Empty handler bro'
       }
-      
+
       if (!icon) {
         //check for default icon for its category
         if (Config.icons[category]) {
@@ -418,14 +416,14 @@ function changeFont(value){
     executeCommand (id, value, firedFromLocalStorage=false) {
       const command = this.getCommandById(id)
       if (command && typeof command.handler === 'function') {
-      
+
         if(command.type !== "value"){
           command.enabled = true
         State.enabledCommands.push(this.getCommandById(id))
         this.updateCommandState(command, true)
         }
         console.log("Executing command. id: "+id);
-     
+
         if(!firedFromLocalStorage && command.enableLocalStorage){
           LocalStorage.saveCommand(command, value);
         }
@@ -451,7 +449,7 @@ function changeFont(value){
         LocalStorage.removeCommand(command);
         return command.resetHandler()
 
-       
+
       }
     }
     // utility
@@ -476,11 +474,11 @@ function changeFont(value){
       if(query==""){return;}
       for (const categoryCommands of Object.values(this.commands)) {
         for (const [name, command] of Object.entries(categoryCommands)) {
-     
+
           if (
-            
+
             command.category.startsWith(query) ||
-            (name && name.startsWith(query)) 
+            (name && name.startsWith(query))
           ) {
             results.push({ [name]: command })
           }
@@ -504,7 +502,7 @@ function changeFont(value){
           'toggle',
           Config.categoryHandlers['font']["handler"],
           Config.categoryHandlers['font']["default"],
-          
+
         )
       })
     }
@@ -520,24 +518,24 @@ function changeFont(value){
           Config.categoryHandlers['language']["default"],
           "",
           false
-          
+
         )
       }
     }
   }
   class CommandBuilder {
     static updateCheckboxVisibility(id, isVisible){
-      
+
       const commandContainer = document.querySelector(`#${id}`);
          const checkbox = commandContainer.children[commandContainer.children.length - 2];
     if (checkbox) {
       checkbox.style.visibility = isVisible ? 'visible' : 'hidden';
     }
     console.log("updateCheckboxVisibility. Removing id: "+id);
-  
+
     }
     static commandTemplate (command) {
-     
+
       // Template literal for a command
       const template = !Config.alternateIcons ? `
         <div class="commandContainer" id="${command.id}">
@@ -562,7 +560,7 @@ function changeFont(value){
           <div class="commandName">${command.name}</div>
         </div>
       `
-     
+
       const tempContainer = document.createElement('div');
       tempContainer.innerHTML = template;
       return tempContainer.children[0];
@@ -573,15 +571,10 @@ function changeFont(value){
         let command = Object.values(obj)[0]
         this.createSingleCommandElement(command)
       })
-      const commandElementsContainer = document.querySelector(".inputSettingsList");
-      const commandElements = commandElementsContainer.children;
-      if(commandElements){
-        commandElements[0].classList.add("hover");
-      }
     }
     static handleCommandClick (command) {
-     
-      
+
+
       let enabledCommands = State.enabledCommands
       let enabledCommandsInSameCategory = enabledCommands.filter(
         obj => obj.category == command.category
@@ -599,7 +592,7 @@ function changeFont(value){
           !command.enabled &&
           enabledCommandsInSameCategory.length > 0
         ) {
-          
+
 
           enabledCommandsInSameCategory.forEach(obj => {
             let enabledCommand = obj
@@ -628,23 +621,14 @@ function changeFont(value){
     }
     static createSingleCommandElement (command) {
       const commandElement = CommandBuilder.commandTemplate(command)
-      
       commandElement.addEventListener('click', () => {
         this.handleCommandClick(command)
-      })
-      commandElement.addEventListener("mouseover", (e) => {
-        let allHoveredElements = Array.from(document.querySelectorAll(".hover"));
-        allHoveredElements.forEach((el)=>el.classList.remove("hover"));
-        commandElement.classList.add("hover");
-      })
-      commandElement.addEventListener("mouseout", (e) => {
-        commandElement.classList.remove("hover");
       })
 
       paletteList.appendChild(commandElement);
     }
   }
- 
+
   function setupArrowKeyNavigation (containerSelector) {
     const container = document.querySelector(containerSelector)
     if (!container) {
@@ -678,7 +662,7 @@ function changeFont(value){
       }
 
       keydownListener = event => {
-        
+
         if(valuePanel.contains(event.target)){
           return;
         }
@@ -689,7 +673,7 @@ function changeFont(value){
           selectedIndex =
             (selectedIndex - 1 + elements.length) % elements.length
           highlightElement(selectedIndex)
-          
+
         } else if (event.key === 'Enter' && event.target.className !== "inputValuePanel" ) {
 
           let enterIndex = selectedIndex;
@@ -699,18 +683,18 @@ function changeFont(value){
             }else{
               enterIndex = 0;
             }
-           
+
           }
-         
-       
-          
+
+
+
           console.log(elements[selectedIndex])
           console.log("elements" + elements);
           console.log("container" + container);
           console.log("selectedIndex: " + selectedIndex);
           const id = elements[enterIndex].id
-          
-          
+
+
           const command = commands.getCommandById(id)
           CommandBuilder.handleCommandClick(command)
         }
@@ -747,7 +731,7 @@ function changeFont(value){
 
     initializeNavigation() // Initial setup
   }
-  
+
   class EventHandlers{
   static  inRaceObserver(){
          const observer = new MutationObserver((mutationsList, observer) => {
@@ -767,85 +751,14 @@ function changeFont(value){
           });
         });
         mainViewportObserver.observe(mainViewport, { attributes: true, childList: true, subtree: true, characterData: true });
-        
-        
+
+
       } else {
         console.error('.mainViewport element not found.');
       }
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
-    }
-    static handleArrowKeys(event){
-      //let commandElements = [];
-      console.log("handling arrow");
-      let key = event.key;
-      let commandElements = document.querySelectorAll(".commandContainer");
-      let container = document.querySelector(".inputSettingsList");
-      if(commandElements.length == 0 || palette.style.display == "none"){
-        return;
-      }
-      
-      let currentIndex = 0;
-      let i = 0;
-      commandElements = Array.from(commandElements);
-      commandElements.forEach((el)=>{
-        if(el.classList.contains("hover")){
-          currentIndex = i; 
-        }
-        i++;
-      })
-      console.log("Current index: "+currentIndex + ". Element: "+commandElements[currentIndex]);
-      let currentElement = commandElements[currentIndex];
-    
-      
-      
-      let downElement = (currentIndex+1 <commandElements.length) ? commandElements[currentIndex+1] : null;
-      let upElement = (currentIndex-1 >-1) ? commandElements[currentIndex-1] : null;
-
-      
-      console.log(downElement);
-      console.log(upElement);
-      //let startIndex = State.lastHoveredCommand ?? 0;
-      //start from where we last hovered, clear all hovers, then start navigation
-
-      //clear state.lasthovered when we press a key afterwards
-
-      //find the currently hovered element
-      
-
-      
-      if(key == "ArrowUp"){
-        event.preventDefault();
-        if(upElement){
-          currentElement.classList.remove("hover");
-          upElement.classList.add("hover");
-          
-          return;
-        }
-      }
-      else if (key=="ArrowDown"){
-        event.preventDefault();
-        if(downElement){
-          
-          currentElement.classList.remove("hover");
-          downElement.classList.add("hover");
-          return;
-        }
-      }
-      else if(key == "Enter"){
-        
-        if(currentElement){
-          const id = currentElement.id;
-          let command = commands.getCommandById(id);
-          CommandBuilder.handleCommandClick(command);
-        }
-          
-
-      }
-      
-
-
     }
   }
   function applyIcons () {
@@ -855,7 +768,7 @@ function changeFont(value){
       'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
     document.head.appendChild(fa)
   }
- 
+
   // ============================================
   // 🧠 Styles
   // ============================================
@@ -867,7 +780,7 @@ function changeFont(value){
   }
   const styles = document.createElement('style')
   styles.textContent = `
- 
+
 `
 
   // ============================================
@@ -891,11 +804,11 @@ function changeFont(value){
   document.head.appendChild(paletteFontStyles);
   function setPaletteFontStyles(){
     let fonts = Config.fonts;
-   
+
     var cssSheet = paletteFontStyles.sheet;
     fonts.forEach((font)=>{
-      
-      
+
+
       font = font.toLowerCase();
       let fontId = "font-" + font.split(" ").join("-");
       cssSheet.insertRule(`#${fontId} >.commandName { font-family: ${font}; }`, cssSheet.cssRules.length);
@@ -908,7 +821,7 @@ EventHandlers.inRaceObserver();
   // ============================================
   // 🧠 Initialize command object
   // ============================================
- 
+
   var commands = new Commands()
   commands.initializeFonts()
   commands.initializeLanguages()
@@ -923,7 +836,7 @@ const loadedSettings = LocalStorage.loadSettings();
 
 
   //Testing
- 
+
   // ============================================
   // 🧠 Event listeners
   // ============================================
@@ -944,30 +857,28 @@ const loadedSettings = LocalStorage.loadSettings();
     if(event.key == "Enter" && event.target.value){
       const id = panel.parentElement.classList[1];
       const value = event.target.value;
-     
+
       commands.executeCommand(id, value);
       closeValuePanel();
     }
   })
 
    document.addEventListener("click", (event) => {
-    
-     
-    
+
+
+
     if(!palette.contains(event.target)){
-      
+
       closePalette();
     }
      setTimeout(()=>{
       if(!valuePanel.contains(event.target)){
-      
+
       closeValuePanel();
     }
      },150)
   })
-   document.addEventListener("keydown", (e)=>EventHandlers.handleArrowKeys(e));
-
-  
+  setupArrowKeyNavigation('ul.inputSettingsList')
 
   // ============================================
   // 🧠 Main program flow.
@@ -976,7 +887,7 @@ const loadedSettings = LocalStorage.loadSettings();
   input.addEventListener('input', function (event) {
     let search = event.target.value;
     console.log(search);
-    
+
 
     let commandsArray = commands.searchCommand(search)
     console.log(commandsArray)
